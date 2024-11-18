@@ -1,0 +1,15 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<AuthorizeView>
+    <Authorized>
+
+      <div>du er logget ind</div>
+    </Authorized>
+    <NotAuthorized>
+        <div>du er ikke logget ind</div>
+    </NotAuthorized>
+</AuthorizeView>

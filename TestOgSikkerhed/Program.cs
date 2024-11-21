@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using TestOgSikkerhed.Components.Account;
 using TestOgSikkerhed.Components;
 using TestOgSikkerhed.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +38,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 string connectionString;
 
-/*
+
 // Commented out Linux-specific parts
 if (OperatingSystem.IsLinux())
 {
@@ -46,7 +48,7 @@ if (OperatingSystem.IsLinux())
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 }
 else
-*/
+
 {
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>

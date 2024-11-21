@@ -2,73 +2,65 @@
 @using Microsoft.AspNetCore.Identity
 
 @inject AuthenticationStateProvider _authenticationStateProvider;
-@inject IServiceProvider _serviceProvider;
-@inject UserManager<Data.ApplicationUser> _userManager
+@*  @inject IServiceProvider _serviceProvider; 
+ @inject UserManager<Data.ApplicationUser> _userManager *@
+
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
-
 @* <AuthorizeView>
     <Authorized>
-        <div> Du ER logget ind</div>
+        <div>Du er logget ind</div>
     </Authorized>
     <NotAuthorized>
-        <div> Du er IKKE logget ind</div>
+        <div>Du er IKKE logget ind</div>
     </NotAuthorized>
 </AuthorizeView> *@
 
-@if (_isAuth)
+@if (_isAuthenticated)
 {
-    <div>Du er logget inde</div>
+    <div>Du er logget ind (from code)</div>
     @if (_isAdmin)
     {
-        <div>Du er også admin!</div>
-    }
-    else
-    {
-        <div>Du er ikke admin!</div>
+        <div>Du er Admin</div>
     }
 }
 else
 {
-    <div>Du er ikke logget ind!</div>
+    <div>Du er IKKE logget ind (from code)</div>
+    @if (_isAdmin)
+    {
+        <div>Du er IKKE Admin</div>
+    }
 }
 
 @code {
-    private bool _isAuth;
+    private bool _isAuthenticated;
     private bool _isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
-         await CreateUserRoleAsync("Admin", "test@admin.dk");
+       // await CreateUserRoleAsync("Admin", "Test@gmail.com");
 
-        var _authenState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var _user = _authenState.User;
-        _isAuth = _user.Identity.IsAuthenticated;
-        _isAdmin = _user.IsInRole("Admin");
+        var authenState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenState.User;
+        _isAuthenticated = user.Identity.IsAuthenticated;
+        _isAdmin = user.IsInRole("Admin");
     }
 
-    private async Task CreateUserRoleAsync(string role, string user)
-    {
-        var roleManager = _serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = _userManager;
+    // private async Task CreateUserRoleAsync(string role, string user)
+    // {
+    //     var roleManager = _serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    //     var userManager = _userManager;
 
-        var userRoleCheck = await roleManager.RoleExistsAsync(role);
+    //     var userRoleCheck = await roleManager.RoleExistsAsync(role);
+    //     if (!userRoleCheck)
+    //     {
+    //         IdentityRole myRole = new IdentityRole(role);
+    //         await roleManager.CreateAsync(myRole);
+    //     }
 
-        if (!userRoleCheck)
-        {
-            IdentityRole myRole = new IdentityRole(role);
-            await roleManager.CreateAsync(myRole);
-        }
-
-        var identityUser = await userManager.FindByEmailAsync(user);
-        if (identityUser == null)
-        {
-            throw new InvalidOperationException($"User with email '{user}' not found.");
-        }
-        await userManager.AddToRoleAsync(identityUser, role);
-    }
+    //     var identityUser = await userManager.FindByEmailAsync(user);
+    //     await userManager.AddToRoleAsync(identityUser, role);
+    // }
 }

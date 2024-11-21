@@ -3,7 +3,7 @@
 
 @inject AuthenticationStateProvider _authenticationStateProvider;
 @*  @inject IServiceProvider _serviceProvider; 
- @inject UserManager<Data.ApplicationUser> _userManager *@
+ @inject UserManager<Data.ApplicationUser> _userManager  *@
 
 
 <PageTitle>Home</PageTitle>
@@ -35,12 +35,12 @@ else
 }
 
 @code {
-    private bool _isAuthenticated;
-    private bool _isAdmin;
+    public bool _isAuthenticated;
+    public bool _isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
-       // await CreateUserRoleAsync("Admin", "Test@gmail.com");
+          // await CreateUserRoleAsync("Admin", "Test@gmail.com");
 
         var authenState = await _authenticationStateProvider.GetAuthenticationStateAsync();
         var user = authenState.User;

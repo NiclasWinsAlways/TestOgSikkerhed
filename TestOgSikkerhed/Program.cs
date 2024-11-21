@@ -39,23 +39,22 @@ builder.Services.Configure<IdentityOptions>(options =>
 string connectionString;
 
 
-// Commented out Linux-specific parts
+
 if (OperatingSystem.IsLinux())
 {
     connectionString = builder.Configuration.GetConnectionString("MockDBConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlite(connectionString));
-    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 }
 else
 
 {
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
-    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+        options.UseSqlServer(connectionString));    
 }
 
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 // builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //     options.UseSqlServer(connectionString));

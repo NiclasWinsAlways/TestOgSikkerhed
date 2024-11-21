@@ -1,11 +1,11 @@
-using Bunit.TestDoubles;
+﻿using Bunit.TestDoubles;
 using Bunit;
 using TestOgSikkerhed.Components.Pages;
 
-public class TestNotAuthenticated
+public class TestNotAuthenticatedAssert
 {
     [Fact]
-    public void NotAuthenticatedMarkupTest()
+    public void NotAuthenticatedTest()
     {
         // Arrange
         using var ctx = new TestContext();
@@ -14,8 +14,10 @@ public class TestNotAuthenticated
 
         // Act
         var cut = ctx.RenderComponent<Home>();
+        var myObject = cut.Instance;
 
         // Assert
-        cut.MarkupMatches("<div>Du er IKKE logget ind (from code)</div>");
+        Assert.False(myObject._isAuthenticated);
+        Assert.False(myObject._isAdmin); // User is not authenticated and not an admin
     }
 }

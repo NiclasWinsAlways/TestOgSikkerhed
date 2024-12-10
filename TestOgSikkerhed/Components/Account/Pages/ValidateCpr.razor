@@ -1,0 +1,102 @@
+﻿@page "/Account/ValidateCpr"
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@inject Models.ServersideDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
+
+<h2>Validate Your CPR</h2>
+
+<!-- Input field for CPR -->
+<input type="text"
+       style="width:150px;height:45px;"
+       @bind="CprNr"
+       placeholder="Enter your CPR" />
+
+<!-- Validate button -->
+<input type="button" class="btn btn-primary" value="Validate CPR" @onclick="ValidateCprInput" />
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <p class="text-danger">@ErrorMessage</p>
+}
+
+@code {
+    private string CprNr { get; set; } = string.Empty; // Local CPR input
+    private string? ErrorMessage; // Error messages
+
+    private async Task ValidateCprInput()
+    {
+        // Clear previous errors
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            // Validate CPR input
+            if (string.IsNullOrWhiteSpace(CprNr))
+            {
+                ErrorMessage = "CPR Number is required.";
+                return;
+            }
+
+            // Get the currently authenticated user
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                ErrorMessage = "User is not authenticated.";
+                return;
+            }
+
+            var username = user.Identity.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                ErrorMessage = "Unable to determine the current user.";
+                return;
+            }
+
+            // Check if the user already has a CPR
+            var userCpr = await DbContext.Cprs.FirstOrDefaultAsync(c => c.User == username);
+
+            if (userCpr == null)
+            {
+                // If no CPR exists, add it
+                var newCpr = new Models.Cpr
+                    {
+                        CprNr = CprNr,
+                        User = username
+                    };
+
+                DbContext.Cprs.Add(newCpr);
+                var changes = await DbContext.SaveChangesAsync();
+
+                if (changes > 0)
+                {
+                    NavigationManager.NavigateTo("/"); // Redirect to homepage
+                }
+                else
+                {
+                    ErrorMessage = "Failed to save CPR to the database.";
+                }
+            }
+            else
+            {
+                // Validate the entered CPR against the stored CPR
+                if (userCpr.CprNr != CprNr)
+                {
+                    ErrorMessage = "The entered CPR does not match the one associated with your account.";
+                    return;
+                }
+
+                // Redirect to homepage if CPR matches
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle errors
+            ErrorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+}

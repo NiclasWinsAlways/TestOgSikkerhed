@@ -69,7 +69,7 @@
     {
         //creates user we force it to use 2fa
         var user = CreateUser();
-        user.TwoFactorEnabled = true;
+        // user.TwoFactorEnabled = true;
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();

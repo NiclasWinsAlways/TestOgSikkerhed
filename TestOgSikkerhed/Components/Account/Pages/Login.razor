@@ -4,11 +4,9 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using TestOgSikkerhed.Data
-
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
-@inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Log in</PageTitle>
 
@@ -32,11 +30,9 @@
                     <label for="password" class="form-label">Password</label>
                     <ValidationMessage For="() => Input.Password" class="text-danger" />
                 </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
+                <div>
+                    <InputCheckbox @bind-Value="Input.RememberMe" />
+                    <label>Remember me</label>
                 </div>
                 <div>
                     <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
@@ -87,30 +83,31 @@
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+        // Attempt to sign in the user
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
-            RedirectManager.RedirectTo(ReturnUrl);
+            // Redirect to the Validate CPR page on successful login
+            NavigationManager.NavigateTo("/Account/ValidateCpr");
         }
-        else if (result.RequiresTwoFactor)
+        else if (result.IsNotAllowed)
         {
-            RedirectManager.RedirectTo(
-                "Account/LoginWith2fa",
-                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            // Email confirmation required
+            errorMessage = "Error: Your account requires email confirmation. Please check your email.";
         }
         else if (result.IsLockedOut)
         {
-            Logger.LogWarning("User account locked out.");
-            RedirectManager.RedirectTo("Account/Lockout");
+            // Account locked out
+            errorMessage = "Error: Your account is locked out. Please try again later.";
         }
         else
         {
-            errorMessage = "Error: Invalid login attempt.";
+            // General invalid login attempt
+            errorMessage = "Error: Invalid login attempt. Please check your email and password.";
         }
     }
+
 
     private sealed class InputModel
     {
@@ -126,3 +123,4 @@
         public bool RememberMe { get; set; }
     }
 }
+    

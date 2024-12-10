@@ -1,66 +1,192 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@inject Models.ServersideDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IServiceProvider ServiceProvider
 
-@inject AuthenticationStateProvider _authenticationStateProvider;
-@*  @inject IServiceProvider _serviceProvider; 
- @inject UserManager<Data.ApplicationUser> _userManager  *@
+<h1>Home</h1>
 
-
-<PageTitle>Home</PageTitle>
-
-@* <AuthorizeView>
-    <Authorized>
-        <div>Du er logget ind</div>
-    </Authorized>
-    <NotAuthorized>
-        <div>Du er IKKE logget ind</div>
-    </NotAuthorized>
-</AuthorizeView> *@
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <p class="text-danger">@ErrorMessage</p>
+}
 
 @if (_isAuthenticated)
 {
-    <div>Du er logget ind (from code)</div>
+    <div>Welcome! You are logged in.</div>
+
     @if (_isAdmin)
     {
-        <div>Du er Admin</div>
+        <div>You are an Admin!</div>
     }
+
+    <h3>To-Do List</h3>
+    <ul style="list-style-type: none; padding: 0;">
+        @foreach (var item in ToDoItems)
+        {
+            <li style="background: #f9f9f9; margin: 5px 0; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                @item.Item
+            </li>
+        }
+    </ul>
+
+    <div>
+        <label for="newTaskInput" style="font-weight: bold;">New Task:</label>
+        <input id="newTaskInput" type="text" @bind="NewTask" placeholder="Enter a new task"
+               style="margin-left: 10px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 300px;" />
+        <button @onclick="AddTask"
+                style="padding: 8px 15px; background: #007bff; color: #fff; border: none; border-radius: 5px; margin-left: 10px; cursor: pointer;">
+            Add Task
+        </button>
+    </div>
 }
 else
 {
-    <div>Du er IKKE logget ind (from code)</div>
-    @if (_isAdmin)
-    {
-        <div>Du er IKKE Admin</div>
-    }
+    <div>You are not logged in. Please log in to manage your to-do list.</div>
 }
 
 @code {
     public bool _isAuthenticated;
     public bool _isAdmin;
+    private List<Models.Todolist>? ToDoItems;
+    private string NewTask { get; set; } = string.Empty;
+    private string? ErrorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-          // await CreateUserRoleAsync("Admin", "Test@gmail.com");
+        await CheckAuthentication();
+        await LoadToDoItems();
 
-        var authenState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authenState.User;
+        // Uncomment to create role and assign admin for testing (one-time use)
+        // await CreateUserRoleAsync("Admin", "Test@gmail.com");
+    }
+
+    private async Task CheckAuthentication()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
         _isAuthenticated = user.Identity.IsAuthenticated;
         _isAdmin = user.IsInRole("Admin");
     }
+    private async Task LoadToDoItems()
+    {
+        ErrorMessage = string.Empty;
+        ToDoItems = new List<Models.Todolist>(); // Initialize to an empty list by default
+
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                ErrorMessage = "User is not authenticated.";
+                return;
+            }
+
+            var username = user.Identity.Name;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                ErrorMessage = "Unable to determine the current user.";
+                return;
+            }
+
+            // Fetch the user's CPR record
+            var userCpr = await DbContext.Cprs.FirstOrDefaultAsync(c => c.User == username);
+
+            if (userCpr == null)
+            {
+                ErrorMessage = "No CPR record found for the current user.";
+                return;
+            }
+
+            // Fetch to-do items for the user
+            ToDoItems = await DbContext.Todolists
+                .Where(t => t.CprId == userCpr.Id)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"An error occurred while loading the to-do list: {ex.Message}";
+        }
+    }
+
+
+    private async Task AddTask()
+    {
+        if (string.IsNullOrWhiteSpace(NewTask))
+        {
+            ErrorMessage = "Task cannot be empty.";
+            return;
+        }
+
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            var username = user.Identity.Name;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                ErrorMessage = "Unable to determine the current user.";
+                return;
+            }
+
+            var userCpr = await DbContext.Cprs.FirstOrDefaultAsync(c => c.User == username);
+
+            if (userCpr == null)
+            {
+                ErrorMessage = "No CPR record found for the current user.";
+                return;
+            }
+
+            var newToDo = new Models.Todolist
+                {
+                    CprId = userCpr.Id,
+                    Item = NewTask
+                };
+
+            DbContext.Todolists.Add(newToDo);
+            var changes = await DbContext.SaveChangesAsync();
+
+            if (changes > 0)
+            {
+                NewTask = string.Empty; // Clear input
+                await LoadToDoItems(); // Refresh list
+            }
+            else
+            {
+                ErrorMessage = "Failed to save the new task.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"An error occurred while adding the task: {ex.Message}";
+        }
+    }
+
+
 
     // private async Task CreateUserRoleAsync(string role, string user)
     // {
-    //     var roleManager = _serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    //     var userManager = _userManager;
+    //     var roleManager = ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    //     var userManager = UserManager;
 
-    //     var userRoleCheck = await roleManager.RoleExistsAsync(role);
-    //     if (!userRoleCheck)
+    //     var roleExists = await roleManager.RoleExistsAsync(role);
+    //     if (!roleExists)
     //     {
-    //         IdentityRole myRole = new IdentityRole(role);
-    //         await roleManager.CreateAsync(myRole);
+    //         var newRole = new IdentityRole(role);
+    //         await roleManager.CreateAsync(newRole);
     //     }
 
     //     var identityUser = await userManager.FindByEmailAsync(user);
-    //     await userManager.AddToRoleAsync(identityUser, role);
+    //     if (identityUser != null)
+    //     {
+    //         await userManager.AddToRoleAsync(identityUser, role);
+    //     }
     // }
 }

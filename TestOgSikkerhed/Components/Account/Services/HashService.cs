@@ -2,44 +2,38 @@
 using System.Security.Cryptography;
 using System.Text;
 using Konscious.Security.Cryptography;
+using BCrypt.Net;
+
 namespace TestOgSikkerhed.Components.Account.Services
 {
-    public class HashingService
+    public class HashService
     {
-        /// <summary>
-        /// Generates a random salt for hashing.
-        /// </summary>
-        /// <returns>A byte array containing the generated salt.</returns>
-        public byte[] GenerateSalt()
+        public static string HashWithSHA2(object input)
         {
-            byte[] salt = new byte[16];
+            byte[] inputBytes;
 
-            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            // Determine input type and convert to byte array
+            if (input is string inputString)
             {
-                rng.GetBytes(salt);
+                inputBytes = Encoding.UTF8.GetBytes(inputString);
+            }
+            else if (input is byte[] inputByteArray)
+            {
+                inputBytes = inputByteArray;
+            }
+            else
+            {
+                throw new ArgumentException("Input must be a string or byte array.");
             }
 
-            return salt;
-        }
-
-        /// <summary>
-        /// Hashes the given input string using Argon2id and the provided salt.
-        /// </summary>
-        /// <param name="input">The input string to hash.</param>
-        /// <param name="salt">The salt to use for hashing.</param>
-        /// <returns>A byte array containing the hashed value.</returns>
-        public byte[] StringHashingWithSalt(string input, byte[] salt)
-        {
-            Argon2id argon2 = new(Encoding.UTF8.GetBytes(input))
+            // Compute the hash using SHA-256
+            using (SHA256 sha256 = SHA256.Create())
             {
-                Salt = salt,
-                DegreeOfParallelism = 4, // Number of threads
-                Iterations = 2,         // Number of iterations
-                MemorySize = 1024       // Memory size in KB
-            };
+                byte[] hashBytes = sha256.ComputeHash(inputBytes);
 
-            byte[] hash = argon2.GetBytes(32); // Generate a 32-byte hash
-            return hash;
+                // Return the hash as a Base64 string
+                return Convert.ToBase64String(hashBytes);
+            }
         }
     }
 }

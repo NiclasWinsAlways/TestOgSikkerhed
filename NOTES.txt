@@ -1,0 +1,43 @@
+9. Setup Your Own Certificate
+To set up a trusted self-signed certificate for your .NET 8 project, follow these steps:
+
+Clean Existing Certificates:
+
+Run the following command to remove any self-signed certificates:
+dotnet dev-certs https --clean
+Generate a New Self-Signed Certificate:
+
+Create a new trusted self-signed certificate:
+dotnet dev-certs https --trust
+Export the Certificate:
+
+Run the following command to export the certificate:
+dotnet dev-certs https -ep %USERPROFILE%\.aspnet\https\[CertificateName IE DolaCerts].pfx -p [Passw0rd]
+Update appsettings.json:
+
+Add the HTTPS configuration to your appsettings.json:
+"Kestrel": {
+  "Endpoints": {
+    "Http": {
+      "Url": "http://localhost:5056"
+    },
+    "Https": {
+      "Url": "https://localhost:7194",
+      "Certificate": {
+        "Path": "",
+        "Password": ""
+      }
+    }
+  }
+}
+Add Password to secrets.json:
+
+Store the password securely in secrets.json:
+{
+  "KestrelPassword": "[Password]"
+}
+
+Encryption thing
+keep both asymetrisk and symetrisk in the class without program crashing in a similar way to the hashing method
+so it can be switched from asymetisk to symetrisk and it would still work 
+check itslearning for examples

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TestOgSikkerhed.Models;
 
@@ -10,9 +11,11 @@ using TestOgSikkerhed.Models;
 namespace TestOgSikkerhed.Migrations
 {
     [DbContext(typeof(ServersideDbContext))]
-    partial class ServersideDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241211080248_UpdateCprNrLength")]
+    partial class UpdateCprNrLength
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,7 +66,7 @@ namespace TestOgSikkerhed.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Todolist__3214EC07C3DEF4E0");
 
-                    b.HasIndex(new[] { "CprId" }, "IX_Todolist_CprId");
+                    b.HasIndex("CprId");
 
                     b.ToTable("Todolist", (string)null);
                 });

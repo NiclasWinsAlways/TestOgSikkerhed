@@ -1,8 +1,10 @@
 ﻿@page "/Account/ValidateCpr"
 @using Microsoft.EntityFrameworkCore
+@using TestOgSikkerhed.Components.Interfaces
 @inject NavigationManager NavigationManager
 @inject Models.ServersideDbContext DbContext
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHashUtility HashUtility
 @rendermode InteractiveServer
 
 <h2>Validate Your CPR</h2>
@@ -27,19 +29,16 @@
 
     private async Task ValidateCprInput()
     {
-        // Clear previous errors
         ErrorMessage = string.Empty;
 
         try
         {
-            // Validate CPR input
             if (string.IsNullOrWhiteSpace(CprNr))
             {
                 ErrorMessage = "CPR Number is required.";
                 return;
             }
 
-            // Get the currently authenticated user
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
@@ -56,15 +55,20 @@
                 return;
             }
 
-            // Check if the user already has a CPR
             var userCpr = await DbContext.Cprs.FirstOrDefaultAsync(c => c.User == username);
 
             if (userCpr == null)
             {
-                // If no CPR exists, add it
+                var hashedCpr = HashUtility.ComputeBcrypt(CprNr);
+                if (string.IsNullOrEmpty(hashedCpr))
+                {
+                    ErrorMessage = "Failed to hash the CPR number.";
+                    return;
+                }
+
                 var newCpr = new Models.Cpr
                     {
-                        CprNr = CprNr,
+                        CprNr = hashedCpr,
                         User = username
                     };
 
@@ -73,7 +77,7 @@
 
                 if (changes > 0)
                 {
-                    NavigationManager.NavigateTo("/"); // Redirect to homepage
+                    NavigationManager.NavigateTo("/");
                 }
                 else
                 {
@@ -82,21 +86,23 @@
             }
             else
             {
-                // Validate the entered CPR against the stored CPR
-                if (userCpr.CprNr != CprNr)
+                if (!HashUtility.VerifyBcrypt(CprNr, userCpr.CprNr))
                 {
                     ErrorMessage = "The entered CPR does not match the one associated with your account.";
                     return;
                 }
 
-                // Redirect to homepage if CPR matches
                 NavigationManager.NavigateTo("/");
             }
         }
+        catch (DbUpdateException dbEx)
+        {
+            var innerMessage = dbEx.InnerException?.Message ?? "No additional details.";
+            ErrorMessage = $"An error occurred while saving changes: {innerMessage}";
+        }
         catch (Exception ex)
         {
-            // Handle errors
-            ErrorMessage = $"An error occurred: {ex.Message}";
+            ErrorMessage = $"An unexpected error occurred: {ex.Message}";
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TestOgSikkerhed.Models;
 
@@ -10,9 +11,11 @@ using TestOgSikkerhed.Models;
 namespace TestOgSikkerhed.Migrations
 {
     [DbContext(typeof(ServersideDbContext))]
-    partial class ServersideDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241211090633_UpdateCprNrLength2")]
+    partial class UpdateCprNrLength2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

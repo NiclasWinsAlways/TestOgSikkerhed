@@ -40,6 +40,8 @@ public partial class ServersideDbContext : DbContext
 
             entity.ToTable("Todolist");
 
+            entity.HasIndex(e => e.CprId, "IX_Todolist_CprId");
+
             entity.Property(e => e.Item).HasMaxLength(300);
 
             entity.HasOne(d => d.Cpr).WithMany(p => p.Todolists)

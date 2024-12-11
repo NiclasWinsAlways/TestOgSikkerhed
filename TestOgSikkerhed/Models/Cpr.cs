@@ -9,7 +9,7 @@ public partial class Cpr
 
     public string CprNr { get; set; } = null!;
 
-    public string User { get; set; } = null!; // The unique identifier for the user (e.g., username)
+    public string User { get; set; } = null!;
 
     public virtual ICollection<Todolist> Todolists { get; set; } = new List<Todolist>();
 }

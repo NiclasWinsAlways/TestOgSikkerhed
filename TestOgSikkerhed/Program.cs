@@ -7,6 +7,8 @@ using TestOgSikkerhed.Data;
 using TestOgSikkerhed.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Security.Cryptography.X509Certificates;
+using TestOgSikkerhed.Components.Interfaces;
+using TestOgSikkerhed.Components.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,6 +102,9 @@ builder.Services.AddAuthorization(options =>
 // Register email sender for email confirmation
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+// Register the HashUtility for dependency injection
+builder.Services.AddSingleton<IHashUtility, HashUtility>();
+
 builder.Services.AddDbContext<ServersideDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -119,15 +124,15 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path.StartsWithSegments("/Account/Logout"))
-    {
-        context.Response.Cookies.Delete(".AspNetCore.Antiforgery"); // Clear antiforgery cookies on logout
-        context.Response.Cookies.Delete(".AspNetCore.Identity.Application"); // Clear identity cookies
-    }
-    await next();
-});
+//app.Use(async (context, next) =>
+//{
+//    if (context.Request.Path.StartsWithSegments("/Account/Logout"))
+//    {
+//        context.Response.Cookies.Delete(".AspNetCore.Antiforgery"); // Clear antiforgery cookies on logout
+//        context.Response.Cookies.Delete(".AspNetCore.Identity.Application"); // Clear identity cookies
+//    }
+//    await next();
+//});
 
 app.UseAuthentication();
 app.UseAuthorization();

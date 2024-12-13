@@ -1,0 +1,99 @@
+# Setting Up HTTPS and Running Your Project in Docker
+
+## Steps to Set Up a Trusted Self-Signed Certificate
+
+1. **Clean Existing Certificates:**
+   - Run the following command to remove any self-signed certificates:
+     ```bash
+     dotnet dev-certs https --clean
+     ```
+
+2. **Generate a New Self-Signed Certificate:**
+   - Create a new trusted self-signed certificate:
+     ```bash
+     dotnet dev-certs https --trust
+     ```
+
+3. **Export the Certificate:**
+   - Export the certificate using this command:
+     ```bash
+     dotnet dev-certs https -ep %USERPROFILE%\.aspnet\https\[CertificateName IE DolaCerts].pfx -p [Passw0rd]
+     ```
+
+4. **Update `appsettings.json`:**
+   - Add the HTTPS configuration:
+     ```json
+     "Kestrel": {
+       "Endpoints": {
+         "Http": {
+           "Url": "http://localhost:5056"
+         },
+         "Https": {
+           "Url": "https://localhost:7194",
+           "Certificate": {
+             "Path": "",
+             "Password": ""
+           }
+         }
+       }
+     }
+     ```
+
+5. **Add Password to `secrets.json`:**
+   - Store the password securely in `secrets.json`:
+     ```json
+     {
+       "KestrelPassword": "[Password]"
+     }
+     ```
+
+---
+
+## Running Your Project in Docker
+
+1. **Install Docker Desktop:**
+   - Download and install Docker Desktop from the [Docker website](https://www.docker.com/products/docker-desktop/).
+
+2. **Add Docker Support to Your Project:**
+   - Open the project in Visual Studio.
+   - Right-click on the project and select **Add > Docker Support**.
+   - In the Docker Support dialog:
+     - Set the **Container OS** to `Linux`.
+     - Set the **Container Build Type** to `Dockerfile`.
+     - Confirm the **Docker Build Context** points to your project folder.
+     - Click **OK** to apply the changes.
+
+3. **Build the Docker Image:**
+   - Open a terminal and navigate to your project directory.
+   - Run the following command to build the Docker image:
+     ```bash
+     docker build -t [ImageName] .
+     ```
+
+4. **Handle Certificates (Optional):**
+   - If you have set up a self-signed certificate, include it in the Docker container:
+     - Out-comment steps 4 and 6 in the certificate setup instructions.
+     - Ensure the certificate parameters are passed in the Docker `run` command.
+
+5. **Run the Docker Container:**
+   - Use the following command to run the container with HTTPS support:
+     ```bash
+     docker run --name [ContainerName] -p 8000:80 -p 8001:443 \
+     -e ASPNETCORE_URLS="https://+;http://+" \
+     -e ASPNETCORE_HTTPS_PORT=8001 \
+     -e ASPNETCORE_Kestrel__Certificates__Default__Path=/https/[CertificateName] \
+     -e ASPNETCORE_Kestrel__Certificates__Default__Password="[Password to Certificate]" \
+     -e ASPNETCORE_ENVIRONMENT=Development \
+     -v %USERPROFILE%\.aspnet\https:/https/ \
+     [ImageName]
+     ```
+
+6. **Verify the Container is Running:**
+   - Check Docker Desktop or run the following command to verify the container:
+     ```bash
+     docker ps
+     ```
+   - Navigate to `https://localhost:8001` in your browser to verify the application.
+
+---
+

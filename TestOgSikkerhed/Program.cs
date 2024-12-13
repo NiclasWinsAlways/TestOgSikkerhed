@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Security.Cryptography.X509Certificates;
 using TestOgSikkerhed.Components.Interfaces;
 using TestOgSikkerhed.Components.Utilities;
+using TestOgSikkerhed.Components.Account.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,12 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<AsymmetricEncryptionService>();
+
+//// Add Identity services
+//builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+//    .AddEntityFrameworkStores<TestOgSikkerhed.Models.ServersideDbContext>()
+//    .AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
 {

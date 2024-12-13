@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CustomSoftware.Security.Services
+namespace TestOgSikkerhed.Components.Utilities
 {
     public class SecureHashingService
     {

@@ -35,6 +35,7 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<AsymmetricEncryptionService>();
+builder.Services.AddScoped<SymmetricEncryptionService>();
 
 //// Add Identity services
 //builder.Services.AddIdentity<IdentityUser, IdentityRole>()
